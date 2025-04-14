@@ -1,0 +1,27 @@
+{
+  "name": "magic-card-selector",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ayat-Obeidat/magic-card-selector.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ayat-Obeidat/magic-card-selector/issues"
+  },
+  "homepage": "https://github.com/Ayat-Obeidat/magic-card-selector#readme",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.24.0",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3"
+  }
+}

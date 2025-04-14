@@ -1,182 +1,296 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <title>Magic The Gathering Cards</title>
   </head>
   <body>
     <script>
-      // ===== Main Title =====
-      const title = document.createElement("h1");
-      title.textContent = "Magic The Gathering Cards";
-      title.style.textAlign = "center";
-      title.style.marginTop = "20px";
-      title.style.fontFamily = "Arial";
-      document.body.appendChild(title);
+      // ===== Constants =====
+      const API_URL = "https://api.magicthegathering.io/v1/cards";
+      const MAX_CARDS_TO_DISPLAY = 12;
 
-      const controlsContainer = document.createElement("div");
-      controlsContainer.style.display = "flex";
-      controlsContainer.style.flexDirection = "column";
-      controlsContainer.style.alignItems = "center";
-      controlsContainer.style.margin = "20px auto";
+      // Color constants
+      const COLORS = {
+        primary: "#4caf50",
+        primaryHover: "#66bb6a",
+        danger: "#f44336",
+        dangerHover: "#e53935",
+        cardSelectedBg: "#E4EFE7",
+        textPrimary: "#333",
+        textSecondary: "#555",
+      };
 
-      const counter = document.createElement("div");
-      counter.textContent = "Selected: 0";
-      counter.style.fontSize = "20px";
-      counter.style.marginBottom = "10px";
+      // Style constants
+      const STYLES = {
+        card: {
+          border: "1px solid #ccc",
+          borderRadius: "10px",
+          padding: "16px",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+          fontFamily: "Arial",
+          transition: "background 0.3s ease",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          minHeight: "260px",
+          backgroundColor: "#fff",
+        },
+        button: {
+          padding: "12px 25px",
+          border: "none",
+          color: "white",
+          fontSize: "16px",
+          cursor: "pointer",
+          borderRadius: "6px",
+          transition: "background 0.3s",
+        },
+        grid: {
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+          gap: "20px",
+          maxWidth: "1000px",
+          margin: "0 auto 50px auto",
+          padding: "20px",
+        },
+      };
 
-      const buttonsContainer = document.createElement("div");
-      buttonsContainer.style.display = "flex";
-      buttonsContainer.style.gap = "15px";
+      // ===== Utility Functions =====
+      const capitalize = (str) => {
+        if (!str) return "";
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+      };
 
-      const selectAllBtn = document.createElement("button");
-      selectAllBtn.textContent = "Select All";
-      selectAllBtn.style.backgroundColor = "#4caf50"; // Green
+      const debounce = (func, delay) => {
+        let timeoutId;
+        return function (...args) {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+      };
 
-      const deselectAllBtn = document.createElement("button");
-      deselectAllBtn.textContent = "Deselect All";
-      deselectAllBtn.style.backgroundColor = "#f44336"; // Red
+      // ===== DOM Elements =====
+      const createMainTitle = () => {
+        const title = document.createElement("h1");
+        title.textContent = "Magic The Gathering Cards";
+        title.style.textAlign = "center";
+        title.style.marginTop = "20px";
+        title.style.fontFamily = "Arial";
+        return title;
+      };
 
-      [selectAllBtn, deselectAllBtn].forEach((btn) => {
-        btn.style.padding = "12px 25px";
-        btn.style.border = "none";
-        btn.style.color = "white";
-        btn.style.fontSize = "16px";
-        btn.style.cursor = "pointer";
-        btn.style.borderRadius = "6px";
-        btn.style.transition = "background 0.3s";
-      });
+      const createCounter = () => {
+        const counter = document.createElement("div");
+        counter.textContent = "Selected: 0";
+        counter.style.fontSize = "20px";
+        counter.style.marginBottom = "10px";
+        return counter;
+      };
 
-      selectAllBtn.onmouseover = () =>
-        (selectAllBtn.style.backgroundColor = "#66bb6a");
-      selectAllBtn.onmouseout = () =>
-        (selectAllBtn.style.backgroundColor = "#4caf50");
+      const createButton = (text, bgColor, hoverColor) => {
+        const button = document.createElement("button");
+        button.textContent = text;
+        Object.assign(button.style, STYLES.button);
+        button.style.backgroundColor = bgColor;
 
-      deselectAllBtn.onmouseover = () =>
-        (deselectAllBtn.style.backgroundColor = "#e53935");
-      deselectAllBtn.onmouseout = () =>
-        (deselectAllBtn.style.backgroundColor = "#f44336");
+        button.onmouseover = () => (button.style.backgroundColor = hoverColor);
+        button.onmouseout = () => (button.style.backgroundColor = bgColor);
 
-      buttonsContainer.appendChild(selectAllBtn);
-      buttonsContainer.appendChild(deselectAllBtn);
+        return button;
+      };
 
-      controlsContainer.appendChild(counter);
-      controlsContainer.appendChild(buttonsContainer);
-      document.body.appendChild(controlsContainer);
+      const createControlsContainer = (
+        counter,
+        selectAllBtn,
+        deselectAllBtn,
+      ) => {
+        const controlsContainer = document.createElement("div");
+        controlsContainer.style.display = "flex";
+        controlsContainer.style.flexDirection = "column";
+        controlsContainer.style.alignItems = "center";
+        controlsContainer.style.margin = "20px auto";
 
-      // ===== Cards Grid =====
-      const grid = document.createElement("div");
-      grid.style.display = "grid";
-      grid.style.gridTemplateColumns = "repeat(auto-fit, minmax(250px, 1fr))";
-      grid.style.gap = "20px";
-      grid.style.maxWidth = "1000px";
-      grid.style.margin = "0 auto 50px auto";
-      grid.style.padding = "20px";
-      document.body.appendChild(grid);
+        const buttonsContainer = document.createElement("div");
+        buttonsContainer.style.display = "flex";
+        buttonsContainer.style.gap = "15px";
+        buttonsContainer.appendChild(selectAllBtn);
+        buttonsContainer.appendChild(deselectAllBtn);
 
-      // ===== Selection Logic =====
-      let selectedCards = new Set();
-      let cardElements = [];
+        controlsContainer.appendChild(counter);
+        controlsContainer.appendChild(buttonsContainer);
+        return controlsContainer;
+      };
 
-      function updateCounter() {
-        counter.textContent = `Selected: ${selectedCards.size}`;
-      }
+      // ===== Card Component =====
+      const createCardElement = (card, onSelect) => {
+        const cardDiv = document.createElement("div");
+        Object.assign(cardDiv.style, STYLES.card);
 
-      async function fetchData() {
-        const response = await fetch(
-          "https://api.magicthegathering.io/v1/cards"
-        );
-        const data = await response.json();
-        const cards = data.cards.slice(0, 12); // Display only the first 12 cards - we can add more, but we follow best practices
+        const title = document.createElement("h3");
+        title.textContent = capitalize(card.name) || "No Name";
+        title.style.margin = "0 0 10px 0";
 
-        cards.forEach((card) => {
-          const cardDiv = document.createElement("div");
-          cardDiv.style.border = "1px solid #ccc";
-          cardDiv.style.borderRadius = "10px";
-          cardDiv.style.padding = "16px";
-          cardDiv.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)";
-          cardDiv.style.fontFamily = "Arial";
-          cardDiv.style.transition = "background 0.3s ease";
-          cardDiv.style.display = "flex";
-          cardDiv.style.flexDirection = "column";
-          cardDiv.style.justifyContent = "space-between";
-          cardDiv.style.minHeight = "260px";
+        const type = document.createElement("p");
+        type.textContent = capitalize(card.type) || "Unknown Type";
+        type.style.fontSize = "14px";
+        type.style.margin = "0 0 10px";
 
-          const title = document.createElement("h3");
-          title.textContent = card.name || "No Name";
-          title.style.margin = "0 0 10px 0";
+        const text = document.createElement("p");
+        text.textContent = card.text || "No Description";
+        text.style.fontSize = "13px";
+        text.style.color = COLORS.textSecondary;
+        text.style.flexGrow = "1";
 
-          const type = document.createElement("p");
-          type.textContent = card.type || "Unknown Type";
-          type.style.fontSize = "14px";
-          type.style.margin = "0 0 10px";
+        const btn = createButton("Select", COLORS.primary, COLORS.primaryHover);
+        btn.style.width = "100%";
+        btn.style.marginTop = "15px";
 
-          const text = document.createElement("p");
-          text.textContent = card.text || "No Description";
-          text.style.fontSize = "13px";
-          text.style.color = "#555";
-          text.style.flexGrow = "1";
+        cardDiv.appendChild(title);
+        cardDiv.appendChild(type);
+        cardDiv.appendChild(text);
+        cardDiv.appendChild(btn);
 
-          const btn = document.createElement("button");
-          btn.textContent = "Select";
-          btn.style.padding = "12px";
-          btn.style.marginTop = "15px";
-          btn.style.border = "none";
-          btn.style.borderRadius = "6px";
-          btn.style.backgroundColor = "#4caf50";
-          btn.style.color = "white";
-          btn.style.cursor = "pointer";
-          btn.style.fontSize = "16px";
-          btn.style.transition = "background 0.3s";
-          btn.style.width = "100%";
-
-          const updateCardStyle = (isSelected) => {
-            cardDiv.style.backgroundColor = isSelected ? "#E4EFE7" : "#fff";
+        return {
+          element: cardDiv,
+          button: btn,
+          updateSelection: (isSelected) => {
+            cardDiv.style.backgroundColor = isSelected
+              ? COLORS.cardSelectedBg
+              : "#fff";
             btn.textContent = isSelected ? "Deselect" : "Select";
-            btn.style.backgroundColor = isSelected ? "#f44336" : "#4caf50";
-          };
+            btn.style.backgroundColor = isSelected
+              ? COLORS.danger
+              : COLORS.primary;
+            btn.onmouseover = () =>
+              (btn.style.backgroundColor = isSelected
+                ? COLORS.dangerHover
+                : COLORS.primaryHover);
+          },
+        };
+      };
 
-          btn.addEventListener("click", () => {
-            if (selectedCards.has(card.id)) {
-              selectedCards.delete(card.id);
-              updateCardStyle(false);
-            } else {
-              selectedCards.add(card.id);
-              updateCardStyle(true);
-            }
-            updateCounter();
+      // ===== Main Application =====
+      class CardApp {
+        constructor() {
+          this.selectedCards = new Set();
+          this.cardElements = [];
+          this.counter = createCounter();
+
+          this.selectAllBtn = createButton(
+            "Select All",
+            COLORS.primary,
+            COLORS.primaryHover,
+          );
+
+          this.deselectAllBtn = createButton(
+            "Deselect All",
+            COLORS.danger,
+            COLORS.dangerHover,
+          );
+
+          this.init();
+        }
+
+        init() {
+          document.body.appendChild(createMainTitle());
+
+          const controlsContainer = createControlsContainer(
+            this.counter,
+            this.selectAllBtn,
+            this.deselectAllBtn,
+          );
+          document.body.appendChild(controlsContainer);
+
+          this.grid = document.createElement("div");
+          Object.assign(this.grid.style, STYLES.grid);
+          document.body.appendChild(this.grid);
+
+          this.setupEventListeners();
+          this.fetchData();
+        }
+
+        setupEventListeners() {
+          this.selectAllBtn.addEventListener("click", () =>
+            this.selectAllCards(),
+          );
+          this.deselectAllBtn.addEventListener("click", () =>
+            this.deselectAllCards(),
+          );
+
+          // Debounced window resize handler
+          window.addEventListener(
+            "resize",
+            debounce(() => {
+              console.log("Window resized - could adjust layout here");
+            }, 300),
+          );
+        }
+
+        updateCounter() {
+          this.counter.textContent = `Selected: ${this.selectedCards.size}`;
+        }
+
+        selectAllCards() {
+          this.cardElements.forEach((card) => {
+            this.selectedCards.add(card.id);
+            card.ui.updateSelection(true);
           });
+          this.updateCounter();
+        }
 
-          cardDiv.appendChild(title);
-          cardDiv.appendChild(type);
-          cardDiv.appendChild(text);
-          cardDiv.appendChild(btn);
-          grid.appendChild(cardDiv);
-
-          cardElements.push({
-            id: card.id,
-            element: cardDiv,
-            toggle: updateCardStyle,
+        deselectAllCards() {
+          this.selectedCards.clear();
+          this.cardElements.forEach((card) => {
+            card.ui.updateSelection(false);
           });
-        });
+          this.updateCounter();
+        }
+
+        async fetchData() {
+          try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            const cards = data.cards.slice(0, MAX_CARDS_TO_DISPLAY);
+            this.renderCards(cards);
+          } catch (error) {
+            console.error("Error fetching cards:", error);
+            this.grid.textContent =
+              "Failed to load cards. Please try again later.";
+          }
+        }
+
+        renderCards(cards) {
+          cards.forEach((card) => {
+            const cardUI = createCardElement(card, (selected) => {
+              if (selected) {
+                this.selectedCards.add(card.id);
+              } else {
+                this.selectedCards.delete(card.id);
+              }
+              this.updateCounter();
+            });
+
+            cardUI.button.addEventListener("click", () => {
+              const isSelected = !this.selectedCards.has(card.id);
+              if (isSelected) {
+                this.selectedCards.add(card.id);
+              } else {
+                this.selectedCards.delete(card.id);
+              }
+              cardUI.updateSelection(isSelected);
+              this.updateCounter();
+            });
+
+            this.grid.appendChild(cardUI.element);
+            this.cardElements.push({
+              id: card.id,
+              ui: cardUI,
+            });
+          });
+        }
       }
 
-      selectAllBtn.addEventListener("click", () => {
-        cardElements.forEach((item) => {
-          selectedCards.add(item.id);
-          item.toggle(true);
-        });
-        updateCounter();
-      });
-
-      deselectAllBtn.addEventListener("click", () => {
-        selectedCards.clear();
-        cardElements.forEach((item) => {
-          item.toggle(false);
-        });
-        updateCounter();
-      });
-
-      fetchData();
+      // Initialize the application
+      new CardApp();
     </script>
   </body>
 </html>
