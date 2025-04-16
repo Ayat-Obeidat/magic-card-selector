@@ -1,237 +1,359 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Magic The Gathering Cards</title>
-  </head>
-  <body>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // Constants
-        const API_URL = "https://api.magicthegathering.io/v1/cards";
-        const MAX_CARDS_TO_DISPLAY = 12;
+    <style>
+      :root {
+        --primary: #4caf50;
+        --danger: #f44336;
+        --bg: #1f1f1f;
+        --card-bg: #2a2a2a;
+        --text: #f5f5f5;
+        --text-secondary: #ccc;
+        --selected-bg: #354d36;
+        --light-bg: #f5f5f5;
+        --light-text: #1f1f1f;
+      }
 
-        // Colors
-        const COLORS = {
-          primary: "#4caf50",
-          danger: "#f44336",
-          selectedBg: "#e4efe7",
-          textSecondary: "#555",
-        };
+      body.light {
+        background-color: var(--light-bg);
+        color: var(--light-text);
+      }
 
-        // Create utility function to create an element with styling
-        const createElement = (
-          tag,
-          classNames = [],
-          textContent = "",
-          styles = {},
-        ) => {
-          const element = document.createElement(tag);
-          element.textContent = textContent;
-          element.classList.add(...classNames);
-          Object.assign(element.style, styles);
-          return element;
-        };
+      body.light .card {
+        background-color: #ffffff;
+      }
 
-        // Create MagicCardApp class
-        class MagicCardApp {
-          constructor() {
-            this.selectedCards = new Set();
-            this.cardElements = [];
-            this.init();
-          }
+      body.light .card.selected {
+        background-color: #d1e7dd;
+      }
 
-          async init() {
-            // Set up page
-            this.setupPage();
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        transition:
+          background-color 0.3s,
+          color 0.3s;
+      }
 
-            // Fetch cards
-            await this.fetchCards();
-          }
+      header {
+        text-align: center;
+        margin: 30px 0 10px;
+      }
 
-          setupPage() {
-            // Create main title
-            const mainTitle = createElement(
-              "h1",
-              [],
-              "Magic The Gathering Cards",
-              { textAlign: "center", marginTop: "20px" },
-            );
-            document.body.appendChild(mainTitle);
+      main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
 
-            // Create controls (Select/Deselect All)
-            const controls = this.createControls();
-            document.body.appendChild(controls);
+      .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+      }
 
-            // Create grid container for the cards
-            this.grid = createElement("div", [], "", {
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-              gap: "20px",
-              maxWidth: "1000px",
-              margin: "0 auto",
-              padding: "20px",
-            });
-            document.body.appendChild(this.grid);
-          }
+      .controls div:first-child {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
 
-          createControls() {
-            const counter = createElement("div", [], "Selected: 0", {
-              fontSize: "20px",
-              marginBottom: "10px",
-            });
-            const selectAllButton = this.createButton(
-              "Select All",
-              COLORS.primary,
-              this.selectAll.bind(this),
-            );
-            const deselectAllButton = this.createButton(
-              "Deselect All",
-              COLORS.danger,
-              this.deselectAll.bind(this),
-            );
+      .button-container {
+        display: flex;
+        gap: 10px;
+      }
 
-            const buttonContainer = createElement(
-              "div",
-              ["button-container"],
-              "",
-              { display: "flex", gap: "15px" },
-            );
-            buttonContainer.appendChild(selectAllButton);
-            buttonContainer.appendChild(deselectAllButton);
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+        transition:
+          background-color 0.2s,
+          transform 0.2s;
+        color: white;
+      }
 
-            const controls = createElement("div", ["controls"], "", {
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              margin: "20px 0",
-            });
-            controls.appendChild(counter);
-            controls.appendChild(buttonContainer);
+      button:hover {
+        transform: scale(1.03);
+      }
 
-            return controls;
-          }
+      button.select {
+        background-color: var(--primary);
+      }
 
-          createButton(text, color, onClick) {
-            const button = createElement("button", [], text, {
-              backgroundColor: color,
-              padding: "12px 25px",
-              border: "none",
-              borderRadius: "6px",
-              fontSize: "16px",
-              cursor: "pointer",
-            });
-            button.addEventListener("click", onClick);
-            button.addEventListener(
-              "mouseover",
-              () => (button.style.backgroundColor = this.darkenColor(color)),
-            );
-            button.addEventListener(
-              "mouseout",
-              () => (button.style.backgroundColor = color),
-            );
-            return button;
-          }
+      button.select:hover {
+        background-color: #388e3c;
+      }
 
-          darkenColor(color) {
-            let darken = (parseInt(color.slice(1), 16) - 0x333333).toString(16);
-            return `#${darken}`;
-          }
+      button.deselect {
+        background-color: var(--danger);
+      }
 
-          async fetchCards() {
-            try {
-              const response = await fetch(API_URL);
-              const data = await response.json();
-              const cards = data.cards.slice(0, MAX_CARDS_TO_DISPLAY);
-              this.renderCards(cards);
-            } catch (error) {
-              console.error("Error fetching cards:", error);
-              this.grid.textContent =
-                "Failed to load cards. Please try again later.";
-            }
-          }
+      button.deselect:hover {
+        background-color: #c62828;
+      }
 
-          renderCards(cards) {
-            cards.forEach((card) => {
-              const cardElement = this.createCardElement(card);
-              this.grid.appendChild(cardElement.element);
-              this.cardElements.push({ id: card.id, ui: cardElement });
-            });
-          }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+      }
 
-          createCardElement(card) {
-            const cardDiv = createElement("div", ["card"], "", {
-              border: "1px solid #ccc",
-              borderRadius: "10px",
-              padding: "16px",
-              backgroundColor: "white",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              minHeight: "260px",
-              transition: "background 0.3s ease",
-            });
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 260px;
+        transition:
+          background-color 0.3s ease,
+          transform 0.3s ease;
+        animation: fadeIn 0.5s ease;
+      }
 
-            const title = createElement("h3", [], card.name);
-            const type = createElement("p", [], card.type);
-            const text = createElement("p", [], card.text || "No Description", {
-              color: COLORS.textSecondary,
-            });
-            const selectButton = this.createButton(
-              "Select",
-              COLORS.primary,
-              () => this.toggleCardSelection(card, selectButton),
-            );
+      .card.selected {
+        background-color: var(--selected-bg);
+      }
 
-            cardDiv.appendChild(title);
-            cardDiv.appendChild(type);
-            cardDiv.appendChild(text);
-            cardDiv.appendChild(selectButton);
+      .card h3 {
+        margin: 0 0 5px;
+      }
 
-            return {
-              element: cardDiv,
-              updateSelection: (isSelected) => {
-                cardDiv.classList.toggle("selected", isSelected);
-                selectButton.textContent = isSelected ? "Deselect" : "Select";
-                selectButton.style.backgroundColor = isSelected
-                  ? COLORS.danger
-                  : COLORS.primary;
-              },
-            };
-          }
+      .card p {
+        margin: 5px 0;
+        color: var(--text-secondary);
+      }
 
-          toggleCardSelection(card, button) {
-            const isSelected = !this.selectedCards.has(card.id);
-            if (isSelected) {
-              this.selectedCards.add(card.id);
-            } else {
-              this.selectedCards.delete(card.id);
-            }
-            this.updateSelection(card.id, isSelected);
-          }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
 
-          updateSelection(cardId, isSelected) {
-            const card = this.cardElements.find((c) => c.id === cardId);
-            card.ui.updateSelection(isSelected);
-          }
+      .fab {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        background-color: var(--primary);
+        color: white;
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+        transition: background-color 0.3s;
+        z-index: 1000;
+      }
 
-          selectAll() {
-            this.cardElements.forEach((card) => {
-              if (!this.selectedCards.has(card.id)) {
-                this.selectedCards.add(card.id);
-                card.ui.updateSelection(true);
-              }
-            });
-          }
+      .fab:hover {
+        background-color: #388e3c;
+      }
 
-          deselectAll() {
-            this.selectedCards.clear();
-            this.cardElements.forEach((card) => card.ui.updateSelection(false));
-          }
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        .grid {
+          grid-template-columns: 1fr;
         }
 
-        // Initialize the app
-        new MagicCardApp();
+        button {
+          font-size: 14px;
+          padding: 8px 16px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>Magic The Gathering Cards</h1>
+    </header>
+
+    <main>
+      <section class="controls" role="region" aria-label="Controls">
+        <div id="counter">Selected: 0</div>
+        <div class="button-container">
+          <button class="select" id="selectAll">Select All</button>
+          <button class="deselect" id="deselectAll">Deselect All</button>
+        </div>
+      </section>
+
+      <section
+        class="grid"
+        id="cardGrid"
+        role="list"
+        aria-label="Card List"
+      ></section>
+
+      <details style="max-width: 800px; margin: 20px auto; color: var(--text)">
+        <summary>About this collection</summary>
+        <p style="margin-top: 10px">
+          This is a sample Magic The Gathering card viewer. You can select and
+          deselect cards, change themes, and enjoy a smooth user experience.
+        </p>
+      </details>
+    </main>
+
+    <div
+      class="fab"
+      id="themeToggle"
+      aria-label="Toggle dark/light theme"
+      title="Toggle Theme"
+    >
+      🌓
+    </div>
+
+    <script>
+      const API_URL = "https://api.magicthegathering.io/v1/cards";
+      const MAX_CARDS = 12;
+
+      const state = {
+        selectedCards: new Set(),
+        cardElements: [],
+      };
+
+      const counter = document.getElementById("counter");
+      const grid = document.getElementById("cardGrid");
+      const themeToggle = document.getElementById("themeToggle");
+
+      const updateCounter = () => {
+        counter.textContent = `Selected: ${state.selectedCards.size}`;
+        localStorage.setItem(
+          "selectedCards",
+          JSON.stringify([...state.selectedCards]),
+        );
+      };
+
+      const createCardElement = (card) => {
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+        cardDiv.setAttribute("role", "listitem");
+
+        const title = document.createElement("h3");
+        title.textContent = card.name || "No Name";
+
+        const type = document.createElement("p");
+        type.textContent = card.type || "Unknown Type";
+
+        const description = document.createElement("p");
+        description.textContent = card.text || "No Description";
+
+        const button = document.createElement("button");
+        button.className = "select";
+        button.textContent = "Select";
+
+        const toggleSelection = () => {
+          const selected = state.selectedCards.has(card.id);
+          if (selected) {
+            state.selectedCards.delete(card.id);
+          } else {
+            state.selectedCards.add(card.id);
+          }
+          cardDiv.classList.toggle("selected", !selected);
+          button.textContent = !selected ? "Deselect" : "Select";
+          button.className = !selected ? "deselect" : "select";
+          updateCounter();
+        };
+
+        button.addEventListener("click", toggleSelection);
+
+        cardDiv.append(title, type, description, button);
+
+        return { id: card.id, element: cardDiv, toggleSelection };
+      };
+
+      const renderCards = (cards) => {
+        cards.forEach((card) => {
+          const cardObj = createCardElement(card);
+          state.cardElements.push(cardObj);
+          grid.appendChild(cardObj.element);
+
+          // Restore previous selection from localStorage
+          if (state.selectedCards.has(cardObj.id)) {
+            cardObj.toggleSelection();
+          }
+        });
+      };
+
+      const fetchCards = async () => {
+        try {
+          const response = await fetch(API_URL);
+          const data = await response.json();
+          const cards = data.cards.slice(0, MAX_CARDS);
+          renderCards(cards);
+        } catch (error) {
+          grid.textContent = "Error loading cards.";
+          console.error("Fetch error:", error);
+        }
+      };
+
+      document.getElementById("selectAll").addEventListener("click", () => {
+        state.cardElements.forEach((card) => {
+          if (!state.selectedCards.has(card.id)) {
+            state.selectedCards.add(card.id);
+            card.element.classList.add("selected");
+            const btn = card.element.querySelector("button");
+            btn.textContent = "Deselect";
+            btn.className = "deselect";
+          }
+        });
+        updateCounter();
+      });
+
+      document.getElementById("deselectAll").addEventListener("click", () => {
+        state.selectedCards.clear();
+        state.cardElements.forEach((card) => {
+          card.element.classList.remove("selected");
+          const btn = card.element.querySelector("button");
+          btn.textContent = "Select";
+          btn.className = "select";
+        });
+        updateCounter();
+      });
+
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("light");
+        localStorage.setItem(
+          "theme",
+          document.body.classList.contains("light") ? "light" : "dark",
+        );
+      });
+
+      // On load: Restore theme + selected cards
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        const savedCards = localStorage.getItem("selectedCards");
+
+        if (savedTheme === "light") {
+          document.body.classList.add("light");
+        }
+
+        if (savedCards) {
+          state.selectedCards = new Set(JSON.parse(savedCards));
+        }
+
+        fetchCards();
       });
     </script>
   </body>
