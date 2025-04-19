@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Magic The Gathering Cards</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Navbar Organism -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <!-- Logo Atom -->
+      <a href="#" class="logo" aria-label="Home">MTG Cards</a>
+
+      <!-- Navigation Links Molecule -->
+      <div class="nav-links">
+        <a href="index.html" class="nav-link" aria-current="page">Home</a>
+        <a href="Cards.html" class="nav-link">Cards</a>
+        <a href="Collections.html" class="nav-link">Collections</a>
+        <a href="About.html" class="nav-link">About</a>
+      </div>
+
+      <!-- Theme Toggle Atom -->
+      <button
+        class="theme-toggle"
+        id="navThemeToggle"
+        aria-label="Toggle theme between light and dark mode"
+      >
+        <span aria-hidden="true">🌓</span>
+        <span class="visually-hidden">Toggle theme</span>
+      </button>
+
+      <!-- Mobile Menu Toggle Atom -->
+      <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="mobileMenu"
+      >
+        <span class="menu-toggle-line"></span>
+        <span class="menu-toggle-line"></span>
+        <span class="menu-toggle-line"></span>
+      </button>
+    </nav>
+
+    <!-- Mobile Menu Organism -->
+    <div class="mobile-menu" id="mobileMenu" aria-labelledby="menuToggle">
+      <a href="index.html" class="nav-link" aria-current="page">Home</a>
+      <a href="Cards.html" class="nav-link">Cards</a>
+      <a href="Collections.html" class="nav-link">Collections</a>
+      <a href="About.html" class="nav-link">About</a>
+    </div>
+  </body>
+</html>
