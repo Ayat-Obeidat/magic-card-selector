@@ -145,13 +145,12 @@ body {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
-  background-color: #e3e3e3;
+  background-color: var(--nav-bg);
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 1;
+  left: 5;
   right: 0;
   z-index: 1001;
-  height: 100%;
 }
 
 .mobile-menu.active {
@@ -253,6 +252,7 @@ button.deselect:hover {
 .card h3 {
   margin: 0 0 10px;
   font-size: 1.3rem;
+  text-align: center;
 }
 
 .card-image-wrapper {
@@ -290,14 +290,6 @@ button.deselect:hover {
   font-size: 0.9rem;
 }
 
-.card-color {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  margin-right: 5px;
-}
-
 .card-rarity {
   font-weight: bold;
 }
@@ -320,8 +312,9 @@ button.deselect:hover {
 
 .mana-cost {
   display: flex;
-  gap: 3px;
-  align-items: center;
+  justify-content: left;
+  gap: 5px;
+  flex-wrap: wrap;
 }
 
 .mana-symbol {
@@ -334,6 +327,7 @@ details {
   border: 1px solid #444;
   border-radius: 6px;
   padding: 8px;
+  cursor: pointer;
 }
 
 details[open] {
@@ -347,10 +341,39 @@ summary {
 }
 
 .card-actions {
-  margin-top: 15px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.select-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.more-details {
+  display: none;
+  margin-top: 10px;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.more-details.active {
+  display: block;
+}
+
+.show-more-btn {
+  background-color: #6c757d;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.show-more-btn:hover {
+  background-color: #5a6268;
 }
 
 @keyframes fadeIn {
@@ -417,11 +440,25 @@ summary {
   .grid {
     grid-template-columns: 1fr;
     padding: 10px;
+    gap: 15px;
+    max-width: 95%;
+    margin: 0 auto;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   button {
     font-size: 14px;
     padding: 8px 16px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .card-image-wrapper {
+    min-height: 250px;
   }
 }
 
